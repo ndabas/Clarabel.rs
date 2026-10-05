@@ -45,6 +45,12 @@ jobs:
             features: "python,pardiso"
             test: true
 
+          # Windows ARM build
+          - os: windows-11-arm
+            target: aarch64
+            features: "python,pardiso-panua"
+            python-version: "3.11" # oldest version available for windows arm64. Wheels are still abi3-py39
+            test: true
 
     steps:
 
@@ -54,8 +60,7 @@ jobs:
         
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          architecture: ${{ matrix.os == 'windows' && matrix.target || '' }}
+          python-version: ${{ matrix.python-version || env.PYTHON_VERSION }}
                     
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -63,7 +68,7 @@ jobs:
           target: ${{ matrix.target }}
           command: build
           manylinux: ${{ matrix.os == 'ubuntu-latest' && 'auto' || '' }}
-          args: -v --release --out dist -i python${{ env.PYTHON_VERSION }} --features "${{ matrix.features }}"
+          args: -v --release --out dist -i python${{ matrix.python-version || env.PYTHON_VERSION }} --features "${{ matrix.features }}"
           
       - name: Install and test built wheel
         if: matrix.test
